@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="icon" type="image/png" href="app_icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أطلس النباتات للأطفال - تنظيم الصناديق</title>
+    <style>
+        :root {
+            --primary-color: #FFD700;
+            --bg-color: #E0F7FA;
+            --correct-color: #4CAF50;
+            --wrong-color: #F44336;
+            --text-dark: #37474F;
+        }
+
+        /* 🌟 تم دمج تعريف الـ body بالكامل هنا لمنع أي تعليق أو تضارب 🌟 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f8e9; /* لون خلفية الأطلس الدافئ */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* تهيئة البعد الثالث لجسم الصفحة بالكامل لحركة كتاب السحرية */
+            perspective: 1500px; 
+        }
+        
+        /* 📦 حاوية الـ Wrapper الجديدة التي تغلف محتويات الأطلس لتبدأ مائلة ومخفية */
+        .main-app-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform-origin: right center; /* الدوران متناسق مع كعب الكتاب من اليمين */
+            backface-visibility: hidden;
+            
+            /* الحركة البطيئة بنسبة 50% (ثانيتين) لتتطابق مع الشاشة الترحيبية */
+            transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 2s ease-in-out;
+            
+            /* الحالة البدئية: الصفحة تأتي من عمق الكتاب */
+            transform: rotateY(-90deg) translateX(-100px);
+            opacity: 0;
+        }
+
+        /* الكلاس الذي سيتم تفعيله عبر الـ JS فور تحميل الصفحة لتعتدل */
+        .main-app-wrapper.page-enter {
+            transform: rotateY(0deg) translateX(0);
+            opacity: 1;
+        }
+        
+        .card-container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 480px;
+            padding: 25px;
+            text-align: center;
+            border: 5px solid #A5D6A7;
+            position: relative;
+        }
+        
+        .navigation-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .btn-nav {
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-nav:active { transform: scale(0.95); }
+        #btn-prev { background-color: #BDBDBD; }
+        #btn-next { background-color: #66BB6A; }
+        
+        .btn-nav:disabled {
+            background-color: #E0E0E0 !important;
+            color: #9E9E9E;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        h1 {
+            color: #2E7D32;
+            font-size: 24px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .stage {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 20px auto;
+            position: relative;
+            perspective: 1000px;
+        }
+        .stage-inner {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .stage-inner.cartoon-mode {
+            animation: floating 3s ease-in-out infinite;
+        }
+        .stage.flipped .stage-inner {
+            transform: rotateY(180deg);
+        }
+        .img-face {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            border-radius: 25px;
+            border: 5px solid var(--primary-color);
+            background: #FFF9C4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            user-select: none;
+        }
+        .img-face.real {
+            transform: rotateY(180deg);
+            background: #E8F5E9;
+            border-color: #81C784;
+        }
+        
+        .welcome-text {
+            font-size: 22px;
+            font-weight: bold;
+            color: rgb(235, 42, 8);
+            margin-bottom: 15px;
+        }
+
+        .story-marquee-container {
+            width: 90%;
+            margin: 20px auto;
+            overflow: hidden; 
+            background: #FFFDE7; 
+            border: 3px dashed #FFB300; 
+            border-radius: 15px;
+            padding: 15px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .story-marquee-text {
+            display: inline-block;
+            white-space: nowrap; 
+            font-size: 1.4rem;
+            color: #2E7D32;
+            font-weight: bold;
+            direction: ltr; 
+            text-align: right; 
+            position: relative;
+            will-change: transform;
+        }
+
+        @keyframes marqueeLeftToRight {
+            0% {
+                transform: translate3d(-10vw, 0, 0); 
+            }
+            100% {
+                transform: translate3d(calc(100% + 100vw), 0, 0);
+            }
+        }
+
+        .controls-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-child {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 32px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-child:active { transform: scale(0.93); }
+        .btn-audio { background-color: #FF7043; color: white; }
+        .btn-lens { background-color: #29B6F6; color: white; transform: translateX(25px);}
+    
+        .btn-label { 
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        .image-label-move {
+            display: inline-block;
+            transform: translateX(25px); 
+        }
+
+        .btn-sesame {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            border: 4px solid #FFE082;
+            border-radius: 20px;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(245, 124, 0, 0.3);
+            transition: all 0.3s ease;
+            margin: 10px auto;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        .btn-sesame:hover { transform: scale(1.04); }
+        .btn-sesame:active { transform: scale(0.96); }
+        
+        .story-box {
+            background: #FFF3E0;
+            border-radius: 20px;
+            padding: 15px;
+            border-right: 6px solid #FF7043;
+            margin-top: 10px;
+            text-align: right;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            display: none; 
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .fact-box {
+            background: #F1F8E9;
+            border-radius: 20px;
+            padding: 15px;
+            border-right: 6px solid #4CAF50;
+            margin-top: 10px;
+            text-align: right;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            display: none; 
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .quiz-container {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 3px dashed #C8E6C9;
+            display: none; 
+            text-align: right;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .quiz-title {
+            color: #E65100;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .option-btn {
+            background-color: #FFFFFF;
+            border: 3px solid #B0BEC5;
+            border-radius: 15px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--text-dark);
+            text-align: right;
+            transition: background-color 0.2s;
+        }
+        .option-btn.correct {
+            background-color: #E8F5E9 !important;
+            border-color: var(--correct-color) !important;
+            color: #2E7D32 !important;
+        }
+        .option-btn.wrong {
+            background-color: #FFEBEE !important;
+            border-color: var(--wrong-color) !important;
+            color: #C62828 !important;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 124, 0, 0.4); }
+            70% { box-shadow: 0 0 0 12px rgba(245, 124, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 124, 0, 0); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #ff0;
+            top: -10px;
+            z-index: 9999; 
+            border-radius: 50%;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+</style>
+</head>
+<<body>
+
+<div id="main-app-content" class="main-app-wrapper">
+    
+    <div class="card-container">
+        
+        <div class="navigation-box">
+            <button class="btn-nav" id="btn-prev" onclick="navigatePlant(-1)">➡️ السابق</button>
+            <button class="btn-nav" id="btn-next" onclick="navigatePlant(1)">التالي ⬅️</button>
+        </div>
+
+        <h1 id="plant-title">جاري تحميل الأطلس...</h1>
+        
+        <div class="stage" id="photo-stage" onclick="onLensClicked()">
+            <div class="stage-inner cartoon-mode" id="stage-inner">
+                <div class="img-face cartoon" id="cartoon-display">🌻</div>
+                <div class="img-face real" id="real-display">🌼</div>
+            </div>
+        </div>
+
+        <div class="welcome-text" id="welcome-message">مرحبا يا أصدقاء</div>
+         
+        <div id="story-text-window" class="story-marquee-container" style="display: none;">
+            <div id="animated-story-text" class="story-marquee-text"></div>
+        </div>
+
+        <div class="controls-wrapper">
+            <div class="control-item">
+                <button id="btn-view-image" class="btn-child btn-lens" onclick="onViewImageClicked()">🔍</button>
+                <span id="label-view-image" class="btn-label image-label-move">شاهدوا صورتي في الطبيعة</span>
+            </div>
+
+            <div class="control-item">
+                <button id="audio-button" class="btn-child btn-audio" onclick="onListenStoryClicked(this)">🔊</button>
+                <span class="btn-label">اسمعوا قصتي</span> 
+            </div>
+        </div>
+
+        <button class="btn-sesame" id="sesame-trigger" onclick="openSesame()">✨ افتح يا سمسم! 📦</button>
+
+        <div class="story-box" id="story-display"></div>
+        <div class="fact-box" id="fact-display"></div>
+
+        <div class="quiz-container" id="quiz-area">
+            <div class="quiz-title">🎮 سؤال المستكشف الذكي:</div>
+            <div id="quiz-question-text" style="font-size: 16px; color: #424242;">جاري تجهيز التحدي...</div>
+            <div class="quiz-options" id="quiz-options-box"></div>
+        </div>
+
+    </div>
+<script>
+        // ==========================================
+        // 1. نظام إدارة الصوت التفاعلي (Audio Manager)
+        // ==========================================
+        class AtlasAudioManager {
+            constructor() {
+                this.currentAudio = null;
+                this.currentPlantCode = null;
+                this.isPlaying = false;
+            }
+
+            togglePlay(characterCode, buttonElement) {
+                // إذا كان نفس الصوت يعمل حالياً نقوم بتبديل حالته (تشغيل/إيقاف مؤقت)
+                if (this.currentAudio && this.currentPlantCode === characterCode) {
+                    if (this.isPlaying) {
+                        this.pauseTrack(buttonElement);
+                    } else {
+                        this.playTrack(buttonElement);
+                    }
+                    return;
+                }
+
+                // إيقاف أي صوت يعمل حالياً لنبتة أخرى لمنع التداخل
+                this.stopCurrentTrack();
+
+                this.currentPlantCode = characterCode;
+                // استدعاء ملف الـ MP3 من مجلد audio بناءً على مفتاح النبتة المعتمد بملف الـ JSON
+                const audioSource = `audio/ar/${characterCode}.mp3`;
+                this.currentAudio = new Audio(audioSource);
+
+                this.currentAudio.addEventListener('ended', () => {
+                    this.resetManager(buttonElement);
+                    
+                    // إخفاء نافذة النص وتصفير الحركة فور انتهاء الصوت تماماً
+                    const textWindow = document.getElementById('story-text-window');
+                    if (textWindow) textWindow.style.display = 'none';
+
+                    document.getElementById('story-display').style.display = 'none';
+                    if (document.getElementById('fact-display').style.display === 'none') {
+                        document.getElementById('welcome-message').style.display = 'block';
+                    }
+                });
+
+                this.currentAudio.addEventListener('error', () => {
+                    console.error(`❌ تعذر تحميل ملف الصوت من المسار: ${audioSource}`);
+                    this.resetManager(buttonElement);
+                });
+
+                this.playTrack(buttonElement);
+            }
+
+            playTrack(buttonElement) {
+                if (!this.currentAudio) return;
+                this.currentAudio.play()
+                    .then(() => {
+                        this.isPlaying = true;
+                        if (buttonElement) {
+                            buttonElement.innerHTML = "⏸️"; // تحويل الأيقونة لإيقاف مؤقت
+                            buttonElement.classList.add('audio-playing');
+                        }
+                    })
+                    .catch(err => console.warn("⚠️ قيود أمان المتصفح تمنع التشغيل التلقائي:", err));
+            }
+
+            pauseTrack(buttonElement) {
+                if (!this.currentAudio) return;
+                this.currentAudio.pause();
+                this.isPlaying = false;
+                if (buttonElement) {
+                    buttonElement.innerHTML = "🔊";
+                    buttonElement.classList.remove('audio-playing');
+                }
+            }
+
+            stopCurrentTrack() {
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
+                    this.currentAudio = null;
+                }
+                this.isPlaying = false;
+                const audioBtn = document.getElementById('audio-button');
+                if (audioBtn) {
+                    audioBtn.innerHTML = "🔊";
+                    audioBtn.classList.remove('audio-playing');
+                }
+            }
+
+            resetManager(buttonElement) {
+                this.currentAudio = null;
+                this.isPlaying = false;
+                this.currentPlantCode = null;
+                if (buttonElement) {
+                    buttonElement.innerHTML = "🔊";
+                    buttonElement.classList.remove('audio-playing');
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+    const mainContent = document.getElementById("main-app-content");
+    
+    // تأخير ميكروسكوبي (50ms) للتأكد من أن المتصفح جاهز لبدء الأنميشن
+    setTimeout(() => {
+        mainContent.classList.add("page-enter");
+    }, 50);
+});
+
+        const atlasAudio = new AtlasAudioManager();
+
+        // ==========================================
+        // 2. دوال التحكم والربط بالـ JSON والواجهة
+        // ==========================================
+        let allPlants = [];
+        let currentIndex = 0;
+        let isRealView = false; // المتغير المركزي الموحد لإدارة حالة العرض (false = كرتون، true = طبيعة)
+        let hasAnswered = false;
+
+        async function loadAtlasData() {
+            try {
+                const response = await fetch('plants.json');
+                const jsonData = await response.json();
+                
+                allPlants = jsonData.map(plant => {
+                    return {
+                        character_code: plant.character_code,
+                        story_ar: plant.story_ar,
+                        title_cartoon: plant.title_cartoon || "نَبْتَةٌ بَرِّيَّةٌ جَمِيلَةٌ", 
+                        title_real: plant.title_real || "المعاينة الطبيعية الحقيقية",
+                        cartoon_image: plant.cartoon_image || `images/${plant.character_code}.png`,
+                        real_image: plant.real_image || `images/${plant.character_code}.jpg`,
+                        fun_fact_ar: plant.fun_fact_ar || "مَعلُومَةٌ سِحْرِيَّة عَنْ هَذِهِ النَّبْتَة الرَّائِعَة!",
+                        quiz: plant.quiz || {
+                            question_ar: "هَلْ تَعْرِفُ أَيْن تَنْمُو هَذِهِ النَّبْتَة？",
+                            options_ar: ["فِي الجِبَالِ وَالسُّهُولِ", "فِي أَعْمَاقِ البَحْرِ", "فِي الفَضَاءِ الخَارِجِيِّ"],
+                            correct_index: 0
+                        }
+                    };
+                });
+
+                if (allPlants.length > 0) {
+                    renderCurrentPlant();
+                } else {
+                    throw new Error("ملف البيانات فارغ أو غير صالح");
+                }
+            } catch (error) {
+                console.error("❌ خطأ أثناء تحميل أو معالجة ملف الـ JSON:", error);
+                const titleElement = document.getElementById('plant-title');
+                if (titleElement) titleElement.innerText = "❌ خطأ في تحميل البيانات";
+            }
+        }
+
+        // 🛠️ دمج وتوحيد دالة زر مشاهدة الصورة لتعمل بشكل فوري دقيق
+        function onViewImageClicked() {
+            console.log("📸 تم الضغط على زر تبديل رؤية الصورة");
+            
+            // 1. قلب الحالة المركزية الموحدة للعرض
+            isRealView = !isRealView;
+            
+            // 2. استدعاء المزامنة البصرية الشاملة فوراً لنفس اللحظة
+            syncImageAndButtonUI();
+        }
+
+        // 🛠️ دالة تفاعلية مركزية تقوم بتحديث العناوين، الأشكال، ونصوص الأزرار بشكل متزامن دقيق
+      function syncImageAndButtonUI() {
+            const currentPlant = allPlants[currentIndex];
+            if (!currentPlant) return;
+
+            // جلب الزر، النص الجانبي، والعنوان
+            const btnImage = document.getElementById('btn-view-image');
+            const labelImage = document.getElementById('label-view-image'); // عنصر النص الجانبي الجديد
+            const plantTitle = document.getElementById('plant-title');
+            const photoStage = document.getElementById('photo-stage');
+            const stageInner = document.getElementById('stage-inner');
+
+            if (isRealView) {
+                // 🌲 عند التحويل إلى: الصورة في الطبيعة
+                if (labelImage) labelImage.innerHTML = "شاهدوا صورتي الكرتونية";
+                if (plantTitle) plantTitle.innerText = currentPlant.title_real;
+                if (photoStage) photoStage.classList.add('flipped');
+                if (stageInner) {
+                    stageInner.classList.remove('cartoon-mode');
+                    stageInner.classList.add('real-mode');
+                }
+            } else {
+                // 🎭 عند العودة إلى: الصورة الكرتونية
+                if (labelImage) labelImage.innerHTML = "شاهدوا صورتي في الطبيعة";
+                if (plantTitle) plantTitle.innerText = currentPlant.title_cartoon;
+                if (photoStage) photoStage.classList.remove('flipped');
+                if (stageInner) {
+                    stageInner.classList.remove('real-mode');
+                    stageInner.classList.add('cartoon-mode');
+                }
+            }
+        }
+        // دالة متبقية متوافقة مع الأنظمة المتقاطعة
+        function toggleView() {
+            onViewImageClicked();
+        }
+        
+        
+
+        function renderCurrentPlant() {
+            if (allPlants.length === 0) return;
+            
+            const plantData = allPlants[currentIndex];
+            hasAnswered = false;
+            
+            isRealView = false; 
+            syncImageAndButtonUI();
+
+            document.getElementById('story-display').style.display = 'none';
+            document.getElementById('fact-display').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('welcome-message').style.display = 'block';
+            
+            const textWindow = document.getElementById('story-text-window');
+            const animatedText = document.getElementById('animated-story-text');
+            if (textWindow) textWindow.style.display = 'none';
+            if (animatedText) {
+                animatedText.innerText = '';
+                animatedText.style.animation = 'none';
+            }
+            
+            // 🔒 هُنـا التعديل: الزر مخفي إجبارياً عند بداية عرض النبتة
+            const sesameBtn = document.getElementById('sesame-trigger');
+            if (sesameBtn) sesameBtn.style.display = 'none';
+            
+            const cartoonDisplay = document.getElementById('cartoon-display');
+            const realDisplay = document.getElementById('real-display');
+            
+            if (cartoonDisplay) {
+                cartoonDisplay.innerHTML = `<img src="${plantData.cartoon_image}" alt="cartoon" style="width:100%; height:100%; object-fit:contain;">`;
+            }
+            if (realDisplay) {
+                realDisplay.innerHTML = `<img src="${plantData.real_image}" alt="real" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+            }
+            
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            
+            if (btnPrev) btnPrev.disabled = (currentIndex === 0);
+            if (btnNext) btnNext.disabled = (currentIndex === allPlants.length - 1);
+
+            buildQuiz(plantData);
+        }
+
+        function onListenStoryClicked(buttonElement) {
+            console.log("🚀 تشغيل دالة الاستماع وشريط النص التزامني");
+            
+            const currentPlant = allPlants[currentIndex];
+            if (!currentPlant) return;
+
+            if (typeof atlasAudio !== 'undefined' && typeof atlasAudio.togglePlay === 'function') {
+                atlasAudio.togglePlay(currentPlant.character_code, buttonElement);
+            }
+
+            const textWindow = document.getElementById('story-text-window');
+            const animatedText = document.getElementById('animated-story-text');
+            
+            if (textWindow && animatedText) {
+                textWindow.style.display = 'block'; 
+                animatedText.innerText = currentPlant.story_ar;
+
+                animatedText.style.animation = 'none';
+                void animatedText.offsetWidth; 
+                
+                animatedText.style.animation = 'marqueeLeftToRight 70s linear forwards';
+                animatedText.style.animationPlayState = 'running';
+            }
+
+            // 🔓 هُنـا التعديل: يظهر الزر الآن سحرياً لأن الطفل بدأ الاستماع للقصة!
+            const sesameBtn = document.getElementById('sesame-trigger');
+            if (sesameBtn) {
+                sesameBtn.style.display = 'inline-block';
+            }
+        }
+
+        function checkAnswer(selectedIndex, clickedButton, correctIndex) {
+            if (hasAnswered) return;
+            
+            if (selectedIndex === correctIndex) {
+                clickedButton.className = 'option-btn correct';
+                
+                // 1. إظهار رسالة النجاح المشجعة
+                const factDisplay = document.getElementById('fact-display');
+                if (factDisplay) {
+                    factDisplay.style.display = 'block';
+                    factDisplay.innerText = "🎉 رائع وممتاز! إجابة صحيحة يا مستكشف الطبيعة الذكي! 🏅";
+                }
+                
+                hasAnswered = true;
+
+                // 2. 🚀 إطلاق مشهد الـ Salut الديناميكي (الأصوات والقصاصات الملونة)
+                triggerCelebrationSalut();
+
+            } else {
+                // ❌ حالة الإجابة الخاطئة
+                clickedButton.className = 'option-btn wrong';
+                
+                // 1. 🎵 تشغيل صوت الإجابة الخاطئة/التنبيه اللطيف فوراً
+                // تأكد من وضع ملف صوتي مناسب (مثل صوت مؤثر خفيف أو محاولة أخرى) باسم wrong.mp3 داخل مجلد audio/
+                const wrongAudio = new Audio('audio/ar/wrong.mp3');
+                wrongAudio.play().catch(err => console.warn("⚠️ قيود المتصفح منعت تشغيل صوت التنبيه تلقائياً:", err));
+                
+                // 2. إعادة الزر لحالته الطبيعية بعد ثانية ونصف ليعيد الطفل المحاولة
+                setTimeout(() => { 
+                    clickedButton.className = 'option-btn'; 
+                }, 1200);
+            }
+        }
+
+        // 🛠️ دالة الـ Salut الاحتفالية الديناميكية
+        function triggerCelebrationSalut() {
+            console.log("🎆 إطلاق مشهد الـ Salut والاحتفال بالإجابة الصحيحة!");
+
+            // أولاً: تشغيل صوت التشجيع والاحتفال
+            // تأكد من وضع ملف صوتي مبهج باسم success.mp3 داخل مجلد audio/
+            const successAudio = new Audio('audio/ar/success.mp3');
+            successAudio.play().catch(err => console.warn("⚠️ قيود المتصفح منعت تشغيل صوت الاحتفال تلقائياً:", err));
+
+            // ثانياً: توليد 100 قصاصة ملونة (Confetti) بشكل عشوائي ومبهج في الشاشة
+            const colors = ['#FF4081', '#00E676', '#00B0FF', '#FFEA00', '#AA00FF', '#FF9100'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                // توزيع عشوائي للقصاصات على عرض الشاشة
+                confetti.style.left = Math.random() * 100 + 'vw';
+                
+                // اختيار لون عشوائي من القائمة لكل قصاصة
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // أحجام عشوائية خفيفة للتنوع البصري
+                const size = Math.random() * 8 + 6 + 'px';
+                confetti.style.width = size;
+                confetti.style.height = size;
+                
+                // أوقات وسرعات سقوط عشوائية لتبدو الحركة طبيعية ومبهجة
+                confetti.style.animationDuration = Math.random() * 2 + 2 + 's'; 
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                
+                // حقن القصاصة في الصفحة
+                document.body.appendChild(confetti);
+                
+                // تنظيف الـ DOM وحذف القصاصة بعد انتهاء حركتها تلقائياً لكي لا تثقل المتصفح
+                confetti.addEventListener('animationend', () => {
+                    confetti.remove();
+                });
+            }
+        }
+
+        // 🛠️ دالة الـ Salut الاحتفالية الديناميكية
+        function triggerCelebrationSalut() {
+            console.log("🎆 إطلاق مشهد الـ Salut والاحتفال بالإجابة الصحيحة!");
+
+            // أولاً: تشغيل صوت التشجيع والاحتفال
+            // تأكد من وضع ملف صوتي مبهج باسم success.mp3 داخل مجلد audio/
+            const successAudio = new Audio('audio/ar/success.mp3');
+            successAudio.play().catch(err => console.warn("⚠️ قيود المتصفح منعت تشغيل صوت الاحتفال تلقائياً:", err));
+
+            // ثانياً: توليد 100 قصاصة ملونة (Confetti) بشكل عشوائي ومبهج في الشاشة
+            const colors = ['#FF4081', '#00E676', '#00B0FF', '#FFEA00', '#AA00FF', '#FF9100'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                // توزيع عشوائي للقصاصات على عرض الشاشة
+                confetti.style.left = Math.random() * 100 + 'vw';
+                
+                // اختيار لون عشوائي من القائمة لكل قصاصة
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // أحجام عشوائية خفيفة للتنوع البصري
+                const size = Math.random() * 8 + 6 + 'px';
+                confetti.style.width = size;
+                confetti.style.height = size;
+                
+                // أوقات وسرعات سقوط عشوائية لتبدو الحركة طبيعية ومبهجة
+                confetti.style.animationDuration = Math.random() * 2 + 2 + 's'; 
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                
+                // حقن القصاصة في الصفحة
+                document.body.appendChild(confetti);
+                
+                // تنظيف الـ DOM وحذف القصاصة بعد انتهاء حركتها تلقائياً لكي لا تثقل المتصفح
+                confetti.addEventListener('animationend', () => {
+                    confetti.remove();
+                });
+            }
+        }
+
+        // دالة "افتح يا سمسم" - تظهر "هل تعلم" وتخفي القصة وصوتها فوراً لتركيز الطفل
+        function openSesame() {
+            if (allPlants.length === 0) return;
+            
+            // قطع صوت القصة فوراً إذا ضغط الطفل على الزر أثناء الاستماع لضمان عدم تداخل الأصوات
+            atlasAudio.stopCurrentTrack();
+
+            document.getElementById('welcome-message').style.display = 'none';
+            
+            const sesameBtn = document.getElementById('sesame-trigger');
+            if (sesameBtn) sesameBtn.style.display = 'none';
+            
+            document.getElementById('story-display').style.display = 'none';
+
+            const factBox = document.getElementById('fact-display');
+            const plantData = allPlants[currentIndex];
+
+            factBox.style.display = 'block';
+            factBox.innerText = plantData.fun_fact_ar;
+
+            document.getElementById('quiz-area').style.display = 'block';
+        }
+
+        // تحريك وتشغيل الصوت الحقيقي وربطه بنص الصندوق المشكول
+        function onAudioClicked(buttonElement) {
+            if (allPlants.length === 0) return;
+            
+            const plantData = allPlants[currentIndex];
+
+            // استدعاء نظام الصوت لتشغيل أو إيقاف ملف الـ MP3 المطابق ديناميكياً
+            atlasAudio.togglePlay(plantData.character_code, buttonElement);
+
+            document.getElementById('welcome-message').style.display = 'none';
+            document.getElementById('fact-display').style.display = 'none';
+            document.getElementById('quiz-area').style.display = 'none';
+            
+            const sesameBtn = document.getElementById('sesame-trigger');
+            if (sesameBtn) sesameBtn.style.display = 'inline-block';
+
+            const storyBox = document.getElementById('story-display');
+            
+            // إذا كان النظام في حالة تشغيل، نظهر الصندوق ونعرض النص المَشْكُول، وإذا أوقفناه نخفيه
+            if (atlasAudio.isPlaying) {
+                storyBox.style.display = 'block';
+                storyBox.innerText = plantData.story_ar;
+            } else {
+                storyBox.style.display = 'none';
+                if (document.getElementById('fact-display').style.display === 'none') {
+                    document.getElementById('welcome-message').style.display = 'block';
+                }
+            }
+        }
+            
+        function buildQuiz(plantData) {
+            document.getElementById('quiz-question-text').innerText = plantData.quiz.question_ar;
+            const optionsBox = document.getElementById('quiz-options-box');
+            optionsBox.innerHTML = "";
+            
+            plantData.quiz.options_ar.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.innerText = option;
+                button.onclick = () => checkAnswer(index, button, plantData.quiz.correct_index);
+                optionsBox.appendChild(button);
+            });
+        }
+
+        // تدمير الصوت فوراً وتصفيره عند تبديل البطاقة بالكامل لضمان الاستقرار السمعي للطفل
+        function navigatePlant(direction) {
+            atlasAudio.stopCurrentTrack(); 
+            currentIndex += direction;
+            renderCurrentPlant();
+        }
+
+        // بدء تحميل البيانات فور تحميل الصفحة بالكامل
+        window.onload = loadAtlasData;
+</script>
+</body>
+</html>
