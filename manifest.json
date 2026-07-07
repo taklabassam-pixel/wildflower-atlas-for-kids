@@ -1,0 +1,43 @@
+{
+  "name": "أَطْلَسُ النَّبَاتَاتِ وَالأَزْهَارِ البَرِّيَّةِ",
+  "short_name": "الأطلس",
+  "id": "/index.html",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#689f38",
+  "icons": [
+    {
+      "src": "app_icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "app_icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "app_icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "mobile-view.png",
+      "sizes": "828x1792",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "desktop-view.png",
+      "sizes": "714x840",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
