@@ -9,6 +9,10 @@
     <link rel="icon" type="image/png" href="app_icon.png">
     <title>أطلس النباتات والأزهار البرية</title>
     <style>
+        body {
+            perspective: 1500px; 
+            transform-style: preserve-3d;
+        }
         /* 🌟 1. التنسيقات العامة وجسم الصفحة 🌟 */
         * {
             box-sizing: border-box;
@@ -137,6 +141,7 @@
             --text-dark: #37474F;
         }
 
+        /* 1. الكلاس الأساسي (يمثل حالة الخروج وحالة الدخول البدئية معاً) */
         .main-app-wrapper {
             width: 100%;
             padding: 20px;
@@ -146,19 +151,26 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            transform-origin: right center; /* الدوران متناسق مع كعب الكتاب من اليمين */
             backface-visibility: hidden;
-            transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 2s ease-in-out;
-            
-            /* الحالة البدئية: الصفحة تأتي مائلة ومخفية من عمق الكتاب */
-            transform: rotateY(-90deg) translateX(-100px);
+            transform-origin: right center; 
+
+            /* الحالة البدئية للدخول والنهائية للخروج */
+            transform: rotateY(270deg) translateZ(-300px);
             opacity: 0;
+
+            /* 🌟 خدعة الخروج: عند حذف الكلاس واختفاء الصفحة، نجعل الـ opacity تختفي بسرعة خاطفة (0.4 ثانية) */
+            /* بينما الـ transform يأخذ وقت أطول لكي لا يلاحظ الطفل الدوران العكسي العنيف أثناء الاختفاء */
+            transition: transform 1.5s ease-in, opacity 0.4s ease-in;
         }
 
-        /* الكلاس الذي سيتم تفعيله فور انتهاء الفيديو لتعتدل الصفحة وتظهر */
+        /* 2. حالة الاستقرار عند الفتح (الصفحة الداخلة) */
         .main-app-wrapper.page-enter {
-            transform: rotateY(0deg) translateX(0);
+            transform: rotateY(360deg) translateZ(0);
             opacity: 1;
+
+            /* 🌟 خدعة الدخول: عندما يضاف الكلاس لفتح الصفحة الجديدة، نعطيها ثانيتين كاملتين (2s) */
+            /* لتأخذ راحتها في الانبثاق والدوران الموحد من زاوية 270 إلى 360 بنعومة بالغة أمام الطفل */
+            transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1), opacity 2s ease-in-out;
         }
         
         .card-container {
@@ -279,7 +291,7 @@
             display: none; /* يظهر عبر الـ JS */
         }
 
-        .story-marquee-text {
+       .story-marquee-text {
             display: inline-block;
             white-space: nowrap; 
             font-size: 1.4rem;
@@ -295,9 +307,8 @@
             /* تفعيل خاصية الحركة الإجبارية */
             position: relative;
             will-change: transform;
-            animation: marqueeEffect 40s linear infinite !important;
+            animation: marqueeEffect 50s linear infinite !important;
         }
-
         /* 🎬 الأنيميشن الفعلي: يجبر النص على الانطلاق من أقصى اليمين إلى أقصى اليسار */
         @keyframes marqueeEffect {
             0% {
@@ -483,10 +494,69 @@
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
             100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
+
+        /* 1. تهيئة الحاوية الكبرى للنبتة لتصبح بيئة ثلاثية الأبعاد */
+        /* الحاوية الكبرى - تأكد أن هذا الكلاس مضاف للـ div المحيط بالبطاقة */
+        /* الحاوية الكبرى - نضمن عدم وجود overflow: hidden يمنع الأنميشن */
+        .plant-card-container {
+            transition: all 0.5s ease-in-out;
+            position: relative;
+            will-change: transform, opacity; /* تنبيه المتصفح لتجهيز كارت الشاشة للحركة */
+        }
+
+        /* حركة الانتقال للنبتة التالية (خروج ودخول مبهج) */
+        .flip-left-effect {
+            animation: slideOutLeft 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* حركة العودة للنبتة السابقة */
+        .flip-right-effect {
+            animation: slideOutRight 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* أنميشن الذهاب للتالي: البطاقة تصغر قليلاً، تنزلق وتختفي، ثم تظهر الجديدة ناصعة */
+        @keyframes slideOutLeft {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            45% {
+                transform: translateX(-100px) scale(0.9);
+                opacity: 0;
+            }
+            55% {
+                transform: translateX(100px) scale(0.9);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* أنميشن العودة للسابق */
+        @keyframes slideOutRight {
+            0% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            45% {
+                transform: translateX(100px) scale(0.9);
+                opacity: 0;
+            }
+            55% {
+                transform: translateX(-100px) scale(0.9);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
-
+     
    <div id="splash-screen" class="splash-container">
     <div class="splash-content">
         <div class="video-mask-wrapper">
@@ -529,13 +599,17 @@
                     <span id="label-view-image" class="btn-label image-label-move">شاهدوا صورتي في الطبيعة</span>
                 </div>
 
+                <!-- الحاوية الكبرى التي تضم كل محتويات النبتة والتي ستنقلب بصرياً -->
+                <div id="plant-page-card" class="plant-card-container page-enter">
+    <!-- محتوى نبتتك بالكامل -->
+</div>
                 <div class="control-item">
                     <button id="audio-button" class="btn-child btn-audio" onclick="onListenStoryClicked(this)">🔊</button>
                     <span class="btn-label">اسمعوا قصتي</span> 
                 </div>
             </div>
 
-            <button class="btn-sesame" id="sesame-trigger" onclick="openSesame()">✨ افتح يا سمسم! 📦</button>
+            <button class="btn-sesame" id="sesame-trigger" onclick="onSesameClicked()">✨ افتح يا سمسم! 📦</button>
 
             <div class="story-box" id="story-display"></div>
             <div class="fact-box" id="fact-display"></div>
@@ -619,115 +693,217 @@
             }
         });
              
-        // ==========================================
-        // 1. نظام إدارة الصوت التفاعلي (Audio Manager)
-        // ==========================================
+       /**
+         * 🎵 نظام إدارة الصوت التفاعلي المطور لأطلس النباتات والزهور البرية
+         * يتكفل بتشغيل ملفات الـ MP3 ومزامنة حركة النص بصرياً وتغيير أيقونات الأزرار تلقائياً
+         */
+
         class AtlasAudioManager {
             constructor() {
-                this.currentAudio = null;
-                this.currentPlantCode = null;
-                this.isPlaying = false;
+                this.currentAudio = null;       // يحتفظ بكائن الصوت الحالي
+                this.currentPlantCode = null;  // يحتفظ بشفرة النبتة الحالية
+                this.isPlaying = false;        // حالة التشغيل الحالية
+                this.TARGET_CPS = 11.5;        // 🎯 معيار الاتزان الرياضي المعتمد (حرف في الثانية)
+                this.AUDIO_BASE_PATH = 'audio/ar/'; // 🌟 المسار الموجه الصحيح داخل حزمة الأندرويد
             }
 
-            togglePlay(characterCode, buttonElement) {
-                // إذا كان نفس الصوت يعمل حالياً نقوم بتبديل حالته (تشغيل/إيقاف مؤقت)
+            /**
+             * الدالة الرئيسية لتشغيل أو إيقاف صوت قصة النبتة مع مزامنة حركة النص وتحديث الأيقونة
+             * @param {string} characterCode - المعرف الفريد للنبتة (مثل: cyclamen_persicum)
+             * @param {string} storyText - النص العربي الكامل للقصة المستخرج من الـ JSON
+             * @param {HTMLElement} animatedTextElement - عنصر الواجهة الذكي الذي يتحرك برمجياً
+             * @param {HTMLElement} buttonElement - عنصر الزر لتحديث شكله بصرياً
+             */
+            togglePlay(characterCode, storyText, animatedTextElement, buttonElement) {
+                // 1. حالة الضغط على نفس زر النبتة الحالية (باوز / استئناف)
                 if (this.currentAudio && this.currentPlantCode === characterCode) {
                     if (this.isPlaying) {
-                        this.pauseTrack(buttonElement);
+                        this.pauseTrack(buttonElement, animatedTextElement);
                     } else {
-                        this.playTrack(buttonElement);
+                        this.playTrack(buttonElement, animatedTextElement);
                     }
                     return;
                 }
 
-                // إيقاف أي صوت يعمل حالياً لنبتة أخرى لمنع التداخل
-                this.stopCurrentTrack();
+                // 2. تصفير النبتة السابقة فوراً
+                this.stopCurrentTrack(animatedTextElement);
 
                 this.currentPlantCode = characterCode;
-                // استدعاء ملف الـ MP3 من مجلد audio بناءً على مفتاح النبتة المعتمد بملف الـ JSON
-                const audioSource = `audio/ar/${characterCode}.mp3`;
+                const audioSource = `${this.AUDIO_BASE_PATH}${characterCode}.mp3`;
+                
                 this.currentAudio = new Audio(audioSource);
+                if (animatedTextElement) {
+                    animatedTextElement.innerText = storyText;
+                    // 🌟 إزالة الأنميشن برمجياً بشكل مؤقت لحين تحميل الميتادات
+                    animatedTextElement.style.setProperty('animation-name', 'none', 'important'); 
+                }
 
-                this.currentAudio.addEventListener('ended', () => {
-                    this.resetManager(buttonElement);
-                    
-                    // إخفاء نافذة النص وتصفير الحركة فور انتهاء الصوت تماماً
-                    const textWindow = document.getElementById('story-text-window');
-                    if (textWindow) textWindow.style.display = 'none';
+                this.currentAudio.addEventListener('loadedmetadata', () => {
+                    const textLength = storyText.length;
+                    const idealDuration = textLength / this.TARGET_CPS;
+                    const actualAudioDuration = this.currentAudio.duration; 
 
-                    document.getElementById('story-display').style.display = 'none';
-                    if (document.getElementById('fact-display').style.display === 'none') {
-                        document.getElementById('welcome-message').style.display = 'block';
+                    let calculatedPlaybackRate = actualAudioDuration / idealDuration;
+                    if (calculatedPlaybackRate < 0.85) calculatedPlaybackRate = 0.85;
+                    if (calculatedPlaybackRate > 1.75) calculatedPlaybackRate = 1.75;
+
+                    this.currentAudio.playbackRate = calculatedPlaybackRate;
+                    const finalAnimationDuration = actualAudioDuration / calculatedPlaybackRate;
+
+                    if (animatedTextElement) {
+                        void animatedTextElement.offsetWidth; // ريست هندسي للـ DOM
+                        // تطبيق مدة الحركة المتزامنة رياضياً بإجبارية أعلى من الـ CSS
+                        animatedTextElement.style.setProperty('animation-duration', `${finalAnimationDuration}s`, 'important');
                     }
                 });
 
-                this.currentAudio.addEventListener('error', () => {
-                    console.error(`❌ تعذر تحميل ملف الصوت من المسار: ${audioSource}`);
-                    this.resetManager(buttonElement);
+                // 🏁 انطلاق الأنميشن الفعلي مع خروج الصوت الذاتي من السماعة
+                this.currentAudio.addEventListener('playing', () => {
+                    if (animatedTextElement) {
+                        animatedTextElement.style.setProperty('animation-name', 'marqueeEffect', 'important');
+                        animatedTextElement.style.setProperty('animation-play-state', 'running', 'important');
+                    }
                 });
 
-                this.playTrack(buttonElement);
+                this.currentAudio.addEventListener('ended', () => {
+                    this.handleAudioEnded(buttonElement, animatedTextElement);
+                });
+
+                this.currentAudio.addEventListener('error', (e) => {
+                    console.error(`❌ تعذر تحميل ملف الصوت: ${audioSource}`);
+                    this.resetManager(buttonElement, animatedTextElement);
+                });
+
+                this.playTrack(buttonElement, animatedTextElement);
             }
 
-            playTrack(buttonElement) {
+           // دالة بدء التشغيل واستئناف الحركة النصية بعد الباوز
+           // دالة بدء التشغيل واستئناف الحركة النصية بعد الباوز
+           // دالة بدء التشغيل واستئناف الحركة النصية من نفس النقطة بدون العودة للبداية
+            playTrack(buttonElement, animatedTextElement) {
                 if (!this.currentAudio) return;
+
                 this.currentAudio.play()
                     .then(() => {
                         this.isPlaying = true;
                         if (buttonElement) {
-                            buttonElement.innerHTML = "⏸️"; // تحويل الأيقونة لإيقاف مؤقت
+                            buttonElement.innerHTML = "⏸️";
                             buttonElement.classList.add('audio-playing');
                         }
+                        
+                        if (animatedTextElement) {
+                            // ▶️ استئناف الحركة من نفس مكان التجميد بدقة
+                            animatedTextElement.style.transform = '';
+                            
+                            // إذا كان هناك وقت محفوظ من الباوز، نقوم بحقنه بالسالب ليقفر المتصفح إليه فوراً
+                            if (this.savedAnimationTime) {
+                                animatedTextElement.style.setProperty('animation-delay', `-${this.savedAnimationTime}s`, 'important');
+                            }
+                            
+                            animatedTextElement.style.setProperty('animation-name', 'marqueeEffect', 'important');
+                        }
+                        console.log(`🔊 استئناف التشغيل متزامناً لـ: ${this.currentPlantCode}`);
                     })
-                    .catch(err => console.warn("⚠️ قيود أمان المتصفح تمنع التشغيل التلقائي:", err));
+                    .catch(error => {
+                        console.warn("⚠️ قيود أمان المتصفح تمنع التشغيل التلقائي:", error);
+                    });
             }
 
-            pauseTrack(buttonElement) {
+            // دالة الإيقاف المؤقت (الباوز) وتجميد النص وحفظ التوقيت الحالي
+            pauseTrack(buttonElement, animatedTextElement) {
                 if (!this.currentAudio) return;
+                
+                // 🎯 حساب اللحظة الزمنية الحالية للصوت للاستفادة منها في حركة النص
+                this.savedAnimationTime = this.currentAudio.currentTime;
+                
                 this.currentAudio.pause();
                 this.isPlaying = false;
+                
                 if (buttonElement) {
                     buttonElement.innerHTML = "🔊";
                     buttonElement.classList.remove('audio-playing');
                 }
+                
+                if (animatedTextElement) {
+                    // التقاط مصفوفة المكان الحالية للنص على الشاشة وتثبيتها
+                    const computedStyle = window.getComputedStyle(animatedTextElement);
+                    const currentTransform = computedStyle.transform || computedStyle.webkitTransform;
+                    
+                    animatedTextElement.style.transform = currentTransform;
+                    
+                    // إيقاف الأنميشن مؤقتاً
+                    animatedTextElement.style.setProperty('animation-name', 'none', 'important');
+                }
+                console.log(`⏸️ تم تجميد النص بصرياً وحفظ توقيت اللحظة: ${this.savedAnimationTime} ثانية`);
             }
 
-            stopCurrentTrack() {
+            // دالة قطع الصوت تماماً وتصفيره وإلغاء الحركات والتوقيت المحفوظ (عند التنقل بين النباتات)
+            stopCurrentTrack(animatedTextElement) {
                 if (this.currentAudio) {
                     this.currentAudio.pause();
                     this.currentAudio.currentTime = 0;
                     this.currentAudio = null;
                 }
                 this.isPlaying = false;
-                const audioBtn = document.getElementById('audio-button');
-                if (audioBtn) {
-                    audioBtn.innerHTML = "🔊";
-                    audioBtn.classList.remove('audio-playing');
+                this.savedAnimationTime = 0; // تصفير العداد الزمني تماماً
+                
+                if (animatedTextElement) {
+                    animatedTextElement.style.transform = '';
+                    animatedTextElement.style.setProperty('animation-delay', '0s', 'important');
+                    animatedTextElement.style.setProperty('animation-name', 'none', 'important');
                 }
+
+                document.querySelectorAll('.audio-playing').forEach(btn => {
+                    btn.innerHTML = "🔊";
+                    btn.classList.remove('audio-playing');
+                });
             }
 
-            resetManager(buttonElement) {
+            // معالجة انتهاء الصوت طبيعياً عند خط النهاية المتطابق
+            handleAudioEnded(buttonElement, animatedTextElement) {
+                this.resetManager(buttonElement, animatedTextElement);
+                
+                console.log("🏁 انتهى الصوت! تخزين النص وإظهار زر (افتح يا سمسم) فقط.");
+
+                // 1. جلب بيانات النبتة الحالية
+                const plantData = allPlants[currentIndex];
+
+                // 2. إظهار زر "افتح يا سمسم" السحري
+                const sesameBtn = document.getElementById('sesame-trigger');
+                if (sesameBtn) {
+                    // 🌟 الخدعة الذكية: تخزين نص "هل تعلم" داخل الزر برمجياً لمنع ضياعه
+                    sesameBtn.dataset.funFact = plantData.fun_fact_ar || ""; 
+                    
+                    sesameBtn.style.display = 'block'; 
+                    sesameBtn.classList.add('pulse-animation'); 
+                }
+
+                // 🔒 التأكد من إخفاء الفقرة والكويز لحين ضغط الزر
+                const factDisplay = document.getElementById('fact-display');
+                if (factDisplay) factDisplay.style.display = 'none';
+
+                const quizArea = document.getElementById('quiz-area');
+                if (quizArea) quizArea.style.display = 'none';
+            }
+
+            // إعادة ضبط المدير للحالة الافتراضية المستقرة وتحديث الأزرار
+            resetManager(buttonElement, animatedTextElement) {
                 this.currentAudio = null;
                 this.isPlaying = false;
                 this.currentPlantCode = null;
+                
                 if (buttonElement) {
                     buttonElement.innerHTML = "🔊";
                     buttonElement.classList.remove('audio-playing');
                 }
+                if (animatedTextElement) {
+                    animatedTextElement.style.animationName = 'none';
+                }
             }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-    const mainContent = document.getElementById("main-app-content");
-    
-    // تأخير ميكروسكوبي (50ms) للتأكد من أن المتصفح جاهز لبدء الأنميشن
-    setTimeout(() => {
-        mainContent.classList.add("page-enter");
-    }, 50);
-});
-
+        // إنشاء نسخة عالمية واحدة ثابتة من مدير الصوت لتعمل عبر التطبيق
         const atlasAudio = new AtlasAudioManager();
-
         // ==========================================
         // 2. دوال التحكم والربط بالـ JSON والواجهة
         // ==========================================
@@ -832,19 +1008,33 @@
             document.getElementById('story-display').style.display = 'none';
             document.getElementById('fact-display').style.display = 'none';
             document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('sesame-trigger').style.display = 'none';
             document.getElementById('welcome-message').style.display = 'block';
-                       
+                    
             const textWindow = document.getElementById('story-text-window');
             const animatedText = document.getElementById('animated-story-text');
+            
+            // 🛑 [إيقاف حتمي]: قطع صوت ونظام النبتة السابقة فوراً عند الانتقال
+            if (typeof atlasAudio !== 'undefined') {
+                atlasAudio.stopCurrentTrack(animatedText);
+            }
+
             if (textWindow) textWindow.style.display = 'none';
             if (animatedText) {
                 animatedText.innerText = '';
                 animatedText.style.animation = 'none';
             }
             
-            // 🔒 هُنـا التعديل: الزر مخفي إجبارياً عند بداية عرض النبتة
+            // 🔒 إخفاء زر افتح يا سمسم إجبارياً عند بداية عرض النبتة
             const sesameBtn = document.getElementById('sesame-trigger');
             if (sesameBtn) sesameBtn.style.display = 'none';
+            
+            // 🎯 إعادة تهيئة شكل زر الصوت عند الانتقال لنبتة جديدة
+            const audioBtn = document.getElementById('audio-button');
+            if (audioBtn) {
+                audioBtn.innerHTML = "🔊";
+                audioBtn.classList.remove('audio-playing');
+            }
             
             const cartoonDisplay = document.getElementById('cartoon-display');
             const realDisplay = document.getElementById('real-display');
@@ -865,48 +1055,47 @@
             buildQuiz(plantData);
         }
 
-        function onListenStoryClicked(buttonElement) {
-            console.log("🚀 تشغيل دالة الاستماع وشريط النص التزامني");
-            
-            const currentPlant = allPlants[currentIndex];
-            if (!currentPlant) return;
-
-            if (typeof atlasAudio !== 'undefined' && typeof atlasAudio.togglePlay === 'function') {
-                atlasAudio.togglePlay(currentPlant.character_code, buttonElement);
-            }
-
-            const textWindow = document.getElementById('story-text-window');
+       function onListenStoryClicked(buttonElement) {
+            const plantData = allPlants[currentIndex];
             const animatedText = document.getElementById('animated-story-text');
             
-            if (textWindow && animatedText) {
-                textWindow.style.display = 'block'; 
-                animatedText.innerText = currentPlant.story_ar;
-
-                animatedText.style.animation = 'none';
-                void animatedText.offsetWidth; 
-                
-                animatedText.style.animation = 'marqueeLeftToRight 70s linear forwards';
-                animatedText.style.animationPlayState = 'running';
+            // إظهار صناديق عرض القصة والنص المتزامن
+            const storyDisplay = document.getElementById('story-display');
+            const textWindow = document.getElementById('story-text-window');
+            
+            if (storyDisplay) {
+                // 🌟 الحل السحري: تصفير وتفريغ نص الإجابة الصحيحة القديم فوراً 
+                // وإعادة اللون الأسود أو الافتراضي للنصوص لكي تظهر القصة بنقاء
+                storyDisplay.innerText = ""; 
+                storyDisplay.style.color = ""; // إعادة اللون الأصلي للتطبيق
+                storyDisplay.style.display = 'block';
             }
+            
+            if (textWindow) textWindow.style.display = 'block';
+            
+            // إخفاء رسالة الترحيب لعرض محتوى النبتة
+            const welcomeMsg = document.getElementById('welcome-message');
+            if (welcomeMsg) welcomeMsg.style.display = 'none';
 
-            // 🔓 هُنـا التعديل: يظهر الزر الآن سحرياً لأن الطفل بدأ الاستماع للقصة!
-            const sesameBtn = document.getElementById('sesame-trigger');
-            if (sesameBtn) {
-                sesameBtn.style.display = 'inline-block';
+            // استدعاء محرك الصوت الذكي مع الحفاظ على التجميد والتوقيت المتزامن
+            if (typeof atlasAudio !== 'undefined') {
+                atlasAudio.togglePlay(plantData.character_code, plantData.story_ar, animatedText, buttonElement);
             }
         }
-
-        function checkAnswer(selectedIndex, clickedButton, correctIndex) {
+       function checkAnswer(selectedIndex, clickedButton, correctIndex) {
             if (hasAnswered) return;
             
+            // 🎯 استهداف صندوق الإجابة المخصص بالـ ID الدقيق
+            const storyDisplay = document.getElementById('story-display');
+
             if (selectedIndex === correctIndex) {
                 clickedButton.className = 'option-btn correct';
                 
-                // 1. إظهار رسالة النجاح المشجعة
-                const factDisplay = document.getElementById('fact-display');
-                if (factDisplay) {
-                    factDisplay.style.display = 'block';
-                    factDisplay.innerText = "🎉 رائع وممتاز! إجابة صحيحة يا مستكشف الطبيعة الذكي! 🏅";
+                // 🎉 1. طباعة رسالة النجاح داخل الـ story-display دون المساس بفقرة هل تعلم
+                if (storyDisplay) {
+                    storyDisplay.innerText = "🎉 رائع وممتاز! إجابة صحيحة يا مستكشف الطبيعة الذكي! 🏅";
+                    storyDisplay.style.color = "#2E7D32"; // اللون الأخضر لعلامة النجاح
+                    storyDisplay.style.display = 'block';
                 }
                 
                 hasAnswered = true;
@@ -918,15 +1107,24 @@
                 // ❌ حالة الإجابة الخاطئة
                 clickedButton.className = 'option-btn wrong';
                 
-                // 1. 🎵 تشغيل صوت الإجابة الخاطئة/التنبيه اللطيف فوراً
-                // تأكد من وضع ملف صوتي مناسب (مثل صوت مؤثر خفيف أو محاولة أخرى) باسم wrong.mp3 داخل مجلد audio/
+                // 📥 1. إظهار العبارة الحزينة المطلوبة داخل الـ story-display
+                if (storyDisplay) {
+                    storyDisplay.innerText = "متأسف . اجابة خاطئة. 😢";
+                    storyDisplay.style.color = "#D32F2F"; // اللون الأحمر التنبيهي اللطيف
+                    storyDisplay.style.display = 'block';
+                }
+
+                // 2. 🎵 تشغيل صوت الإجابة الخاطئة من المجلد
                 const wrongAudio = new Audio('audio/ar/wrong.mp3');
                 wrongAudio.play().catch(err => console.warn("⚠️ قيود المتصفح منعت تشغيل صوت التنبيه تلقائياً:", err));
                 
-                // 2. إعادة الزر لحالته الطبيعية بعد ثانية ونصف ليعيد الطفل المحاولة
+                // 3. إعادة الزر للحالة الطبيعية وإخفاء رسالة الخطأ فقط بعد ثانية ونصف ليعيد الطفل التخمين
                 setTimeout(() => { 
                     clickedButton.className = 'option-btn'; 
-                }, 1200);
+                    if (storyDisplay && !hasAnswered) {
+                        storyDisplay.style.display = 'none'; // إخفاء صندوق النتيجة فقط ليبقى نص هل تعلم واضحاً
+                    }
+                }, 3000);
             }
         }
 
@@ -1012,29 +1210,144 @@
             }
         }
 
-        // دالة "افتح يا سمسم" - تظهر "هل تعلم" وتخفي القصة وصوتها فوراً لتركيز الطفل
-        function openSesame() {
-            if (allPlants.length === 0) return;
-            
-            // قطع صوت القصة فوراً إذا ضغط الطفل على الزر أثناء الاستماع لضمان عدم تداخل الأصوات
-            atlasAudio.stopCurrentTrack();
+        // دالة الانتقال للنبتة التالية
+        // دالة الانتقال للنبتة التالية
+       // دالة الانتقال للنبتة التالية مع كونسولات الفحص والتتبع
+function nextPlant() {
+    console.log("➡️ [بدء عملية الانتقال للتالي] المؤشر الحالي قبل الزيادة:", currentIndex);
+    
+    if (currentIndex < allPlants.length - 1) {
+        const pageCard = document.getElementById('plant-page-card');
+        
+        // 🔍 فحص 1: هل جافا سكريبت عثر على الحاوية الكبرى في الـ HTML؟
+        if (!pageCard) {
+            console.error("❌ [خطأ فادح في الـ HTML]: لم يتم العثور على عنصر يحمل المعرف id='plant-page-card' في الصفحة!");
+            // محاولة الانتقال التقليدي كخطة بديلة بدون أنميشن لكي لا يتوقف التطبيق
+            currentIndex++;
+            renderCurrentPlant();
+            return;
+        }
+        
+        console.log("✅ [فحص 1 ناجح]: تم العثور على عنصر الحاوية بنجاح:", pageCard);
 
-            document.getElementById('welcome-message').style.display = 'none';
+        // 🔍 فحص 2: التحقق من وجود الكلاس الأصلي المسؤول عن البيئة ثلاثية الأبعاد
+        if (!pageCard.classList.contains('plant-card-container')) {
+            console.warn("⚠️ [تنبيه CSS]: الحاوية لا تمتلك الكلاس 'plant-card-container'. قد لا تظهر التأثيرات ثلاثية الأبعاد بوضوح.");
+        }
+
+        // 🚀 خطوة 1: إضافة كلاس الأنميشن
+        console.log("🎬 جاري حقن كلاس الأنميشن: 'flip-left-effect'");
+        pageCard.classList.add('flip-left-effect');
+        
+        // 🚀 خطوة 2: الدخول في التوقيت الزمني لمنتصف الحركة (350 ملي ثانية)
+        setTimeout(() => {
+            currentIndex++;
+            console.log("🔄 [منتصف الحركة]: تم زيادة المؤشر برمجياً ليصبح:", currentIndex, "جاري تبديل البيانات الآن...");
             
+            // تصفير الواجهات
+            try {
+                document.getElementById('story-display').style.display = 'none';
+                document.getElementById('fact-display').style.display = 'none';
+                document.getElementById('sesame-trigger').style.display = 'none';
+                document.getElementById('quiz-area').style.display = 'none';
+                if (typeof hasAnswered !== 'undefined') hasAnswered = false;
+                console.log("🧹 تم تصفير جميع الصناديق والواجهات بنجاح.");
+            } catch (clearError) {
+                console.warn("⚠️ حدث تفاوت أثناء محاولة تصفير بعض العناصر (ربما أحد الـ IDs غير متطابق):", clearError);
+            }
+
+            // شحن وتحديث بيانات النبتة الجديدة في الواجهة
+            renderCurrentPlant(); 
+            console.log("✨ تم تحديث نصوص وصور النبتة الجديدة رقم:", currentIndex);
+        }, 350);
+
+        // 🚀 خطوة 3: نهاية الأنميشن وتنظيف الكلاس (700 ملي ثانية)
+        setTimeout(() => {
+            console.log("🧹 [نهاية الأنميشن]: جاري سحب كلاس 'flip-left-effect' لإعادة تهيئة البطاقة للمرة القادمة.");
+            pageCard.classList.remove('flip-left-effect');
+        }, 700);
+
+    } else {
+        console.log("🚫 لا يمكن الانتقال للتالي، أنت تقف بالفعل عند النبتة الأخيرة في الأطلس.");
+    }
+}
+
+// دالة العودة للنبتة السابقة مع كونسولات الفحص والتتبع
+function prevPlant() {
+    console.log("⬅️ [بدء عملية العودة للسابق] المؤشر الحالي قبل النقصان:", currentIndex);
+    
+    if (currentIndex > 0) {
+        const pageCard = document.getElementById('plant-page-card');
+        
+        // 🔍 فحص 1: هل جافا سكريبت عثر على الحاوية الكبرى في الـ HTML؟
+        if (!pageCard) {
+            console.error("❌ [خطأ فادح في الـ HTML]: لم يتم العثور على عنصر يحمل المعرف id='plant-page-card' في الصفحة!");
+            currentIndex--;
+            renderCurrentPlant();
+            return;
+        }
+        
+        console.log("✅ [فحص 1 ناجح]: تم العثور على عنصر الحاوية بنجاح:", pageCard);
+
+        // 🚀 خطوة 1: إضافة كلاس الأنميشن للعودة
+        console.log("🎬 جاري حقن كلاس الأنميشن: 'flip-right-effect'");
+        pageCard.classList.add('flip-right-effect');
+        
+        // 🚀 خطوة 2: الدخول في التوقيت الزمني لمنتصف الحركة (350 ملي ثانية)
+        setTimeout(() => {
+            currentIndex--;
+            console.log("🔄 [منتصف الحركة]: تم إنقاص المؤشر برمجياً ليصبح:", currentIndex, "جاري تبديل البيانات الآن...");
+            
+            // تصفير الواجهات
+            try {
+                document.getElementById('story-display').style.display = 'none';
+                document.getElementById('fact-display').style.display = 'none';
+                document.getElementById('sesame-trigger').style.display = 'none';
+                document.getElementById('quiz-area').style.display = 'none';
+                if (typeof hasAnswered !== 'undefined') hasAnswered = false;
+            } catch (clearError) {
+                console.warn("⚠️ حدث تفاوت أثناء محاولة تصفير بعض العناصر:", clearError);
+            }
+
+            renderCurrentPlant();
+            console.log("✨ تم تحديث نصوص وصور النبتة السابقة رقم:", currentIndex);
+        }, 350);
+
+        // 🚀 خطوة 3: نهاية الأنميشن وتنظيف الكلاس (700 ملي ثانية)
+        setTimeout(() => {
+            console.log("🧹 [نهاية الأنميشن]: جاري سحب كلاس 'flip-right-effect' لإعادة تهيئة البطاقة.");
+            pageCard.classList.remove('flip-right-effect');
+        }, 700);
+
+    } else {
+        console.log("🚫 لا يمكن العودة للخلف، أنت تقف بالفعل عند النبتة الأولى في الأطلس.");
+    }
+}
+             // دالة "افتح يا سمسم" - تظهر "هل تعلم" وتخفي القصة وصوتها فوراً لتركيز الطفل
+        function onSesameClicked() {
+            console.log("🔑 تم نقر كلمة السر السحرية! فتح صناديق الواجهة.");
+
             const sesameBtn = document.getElementById('sesame-trigger');
-            if (sesameBtn) sesameBtn.style.display = 'none';
+            const savedFunFact = sesameBtn ? sesameBtn.dataset.funFact : "";
+
+            // 🌟 1. إظهار نص "هل تعلم" داخل صندوق الـ fact-display بالـ ID الدقيق
+            const factDisplay = document.getElementById('fact-display');
+            if (factDisplay && savedFunFact) {
+                factDisplay.innerText = savedFunFact;
+                factDisplay.style.display = 'block'; // تشغيل الظهور المبهج
+            }
+
+            // 🌟 2. إظهار منطقة الكويز الكاملة (quiz-area)
+            const quizArea = document.getElementById('quiz-area');
+            if (quizArea) {
+                quizArea.style.display = 'block';
+            }
             
-            document.getElementById('story-display').style.display = 'none';
-
-            const factBox = document.getElementById('fact-display');
-            const plantData = allPlants[currentIndex];
-
-            factBox.style.display = 'block';
-            factBox.innerText = plantData.fun_fact_ar;
-
-            document.getElementById('quiz-area').style.display = 'block';
+            // 🌟 3. إخفاء زر "افتح يا سمسم" بعد أداء مهمته
+            if (sesameBtn) {
+                sesameBtn.style.display = 'none';
+            }
         }
-
         // تحريك وتشغيل الصوت الحقيقي وربطه بنص الصندوق المشكول
         function onAudioClicked(buttonElement) {
             if (allPlants.length === 0) return;
@@ -1080,10 +1393,76 @@
         }
 
         // تدمير الصوت فوراً وتصفيره عند تبديل البطاقة بالكامل لضمان الاستقرار السمعي للطفل
-        function navigatePlant(direction) {
-            atlasAudio.stopCurrentTrack(); 
-            currentIndex += direction;
-            renderCurrentPlant();
+        // الدالة الموحدة والمطابقة لأزرار التنقل لديك مع حقن أنميشن قلب الصفحة
+        // 1. الدالة المركزية الذكية الموحدة (التي تستدعيها أزرار الـ HTML حالياً)
+function navigatePlant(direction) {
+    console.log("📢 [أزرار التنقل الأطلس]: الاتجاه الممرر هو ->", direction);
+
+    const globalContainer = document.getElementById('main-app-content');
+    
+    if (!globalContainer) {
+        console.error("❌ لم يتم العثور على main-app-content!");
+        executeIndexChange(direction);
+        return;
+    }
+
+    // 🎬 1. إغلاق الصفحة الحالية (إرجاعها إلى عمق الكتاب بزاوية -90 درجة)
+    // نقوم بسحب الكلاس فيبدأ المتصفح تلقائياً بحركة الإغلاق التي تستغرق ثانيتين بـ الـ CSS المكتوب عندك
+    globalContainer.classList.remove('page-enter');
+
+    // ⏳ 2. ننتظر حتى تنطوي الصفحة بالكامل وتختفي (ثانيتين = 2000 ملي ثانية)
+    setTimeout(() => {
+        
+        // 🔄 3. الآن والصفحة مخفية ومنطوية تماماً، نقوم بتحديث الصور والنصوص وتصفير الصناديق
+        executeIndexChange(direction);
+
+        // 🎬 4. إعادة فتح الصفحة الجديدة كلياً أمام الطفل
+        // نقوم بإعادة حقن الكلاس السحري المعتمد لديك ليقوم بالدوران المعاكس والفتح بنعومة
+        globalContainer.classList.add('page-enter');
+        
+        console.log("📖 ✨ [نجاح احترافي قاطع]: تم قلب الصفحة وشحن بيانات النبتة الجديدة بنجاح تنيظمي!");
+
+    }, 1000); // 1000ms مطابقة تماماً للـ transition المكتوب في الـ CSS الخاص بك
+}
+// 2. دالة شبكة الأمان للتالي
+function nextPlant() {
+    console.log("📲 تم استدعاء nextPlant() احتياطياً - تحويل إلى navigatePlant(1)");
+    navigatePlant(1);
+}
+
+// 3. دالة شبكة الأمان للسابق
+function prevPlant() {
+    console.log("📲 تم استدعاء prevPlant() احتياطياً - تحويل إلى navigatePlant(-1)");
+    navigatePlant(-1);
+}
+        // دالة داخلية مساعدة لتغيير المؤشر وتحديث البيانات بأمان وتصفير الواجهات
+        function executeIndexChange(direction) {
+            // حساب المؤشر الجديد المستهدف
+            const nextIndex = currentIndex + direction;
+
+            // التأكد من أن المؤشر الجديد يقع ضمن حدود مصفوفة النباتات
+            if (nextIndex >= 0 && nextIndex < allPlants.length) {
+                currentIndex = nextIndex;
+                console.log("🔄 [منتصف الحركة]: تم تحديث المؤشر بنجاح ليصبح:", currentIndex);
+
+                // 🧹 تصفير الصناديق والواجهات كما اتفقنا هندسياً لتهيئتها للنبتة الجديدة
+                try {
+                    document.getElementById('story-display').style.display = 'none';
+                    document.getElementById('fact-display').style.display = 'none';
+                    document.getElementById('sesame-trigger').style.display = 'none';
+                    document.getElementById('quiz-area').style.display = 'none';
+                    if (typeof hasAnswered !== 'undefined') hasAnswered = false;
+                    console.log("🧼 تم تصفير صناديق النتيجة والواجهات بنجاح.");
+                } catch (clearError) {
+                    console.warn("⚠️ تفاوت خفيف أثناء محاولة تصفير بعض العناصر:", clearError);
+                }
+
+                // شحن البيانات الجديدة للنبتة المستهدفة
+                renderCurrentPlant();
+                console.log("✨ تم شحن وتحديث بيانات الواجهة للنبتة رقم:", currentIndex);
+            } else {
+                console.log("🚫 تنبيه: لا يمكن الانتقال، لقد وصلت إلى نهاية الأطلس في هذا الاتجاه!");
+            }
         }
 
         // بدء تحميل البيانات فور تحميل الصفحة بالكامل
